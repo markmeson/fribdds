@@ -21,6 +21,9 @@ wxIMPLEMENT_APP(fribddsApp);
 bool fribddsApp::OnInit()
 {
     frame = new mainframe( "Frib DDS Viewer", wxPoint(50, 50), wxSize(300, 300) );
-    frame->Show( true );
+    frame->Show(true);
+		if(wxApp::argc == 2)
+			frame->open(static_cast<const char *>(wxApp::argv[1]));
+
     return true;
 }

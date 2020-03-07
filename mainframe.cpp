@@ -4,6 +4,7 @@
 extern char buffer[2048];
 
 dds maindds;
+int imousex, imousey;
 
 wxBEGIN_EVENT_TABLE(mainframe, wxFrame)
     EVT_MENU(ID_Open,   mainframe::OnOpen)
@@ -12,6 +13,7 @@ wxBEGIN_EVENT_TABLE(mainframe, wxFrame)
     EVT_MENU(wxID_EXIT,  mainframe::OnExit)
 		EVT_SIZE(mainframe::OnResize)
 		EVT_PAINT(mainframe::OnRepaint)
+		EVT_MOTION(mainframe::OnMotion)
 wxEND_EVENT_TABLE()
 
 mainframe::mainframe(const wxString& title, const wxPoint& pos, const wxSize& size)
@@ -58,6 +60,12 @@ void mainframe::close() {
 	SetMaxClientSize(wxSize(300, 300));
 }
 
+void mainframe::OnMotion(wxMouseEvent& event) {
+	event.GetPosition(&m_imousex, &m_imousey);
+	sprintf(buffer, "%d, %d", m_imousex - m_idrawx, m_imousey - m_idrawy);
+	SetStatusText(buffer);
+}
+
 void mainframe::OnOpen(wxCommandEvent& event) {
 	wxFileDialog fdlg(this, "Open DDS File", "", "", "DDS files (*.dds;*.DDS)|*.dds;*.DDS", wxFD_OPEN|wxFD_FILE_MUST_EXIST);
 
@@ -65,12 +73,14 @@ void mainframe::OnOpen(wxCommandEvent& event) {
 		SetStatusText("File open canceled...");
 		return;	
 	}
+	open(fdlg.GetPath(), fdlg.GetFilename());
+}
 
-	if(!maindds.setfile(fdlg.GetPath())) {
+void mainframe::open(const char *path, const char *f) {
+	if(!maindds.setfile(path)) {
 		wxLogMessage("Error setting dds file name");
 		return;
 	}
-
 	int openresult;
 	if((openresult = maindds.open())) {
 		switch(openresult) {
@@ -134,7 +144,7 @@ void mainframe::OnOpen(wxCommandEvent& event) {
 		SetMaxClientSize(wxSize(300, 300));
 		SetMinClientSize(wxSize(300, 300));
 	}
-	sprintf(buffer, "Frib DDS Viewer - %s", static_cast<const char *>(fdlg.GetFilename()));
+	sprintf(buffer, "Frib DDS Viewer - %s", static_cast<const char *>(strlen(f) > 0 ? f : path));
 	SetLabel(buffer);
 	menuFile->Enable(ID_Close, 1);
 	menuView->Enable(ID_Show, 1);

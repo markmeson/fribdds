@@ -18,9 +18,11 @@ class mainframe : public wxFrame {
 	public:
     mainframe(const wxString& title, const wxPoint& pos, const wxSize& size);
 		void setstatus(const char *st);
+		void open(const char *path, const char *f = "");
 	private:
     void OnClose(wxCommandEvent& event);
     void OnExit(wxCommandEvent& event);
+    void OnMotion(wxMouseEvent& event);
     void OnOpen(wxCommandEvent& event);
     void OnShow(wxCommandEvent& event);
     void OnRepaint(wxPaintEvent& event);
@@ -34,6 +36,8 @@ class mainframe : public wxFrame {
 		bool m_bImageset;
 		int m_idrawx;
 		int m_idrawy;
+		int m_imousex;
+		int m_imousey;
 };
 
 #endif

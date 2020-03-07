@@ -25,7 +25,7 @@ typedef unsigned UINT;
 class dds {
 	public:
 		dds();
-		bool setfile(const char *fname);
+		bool setfile(const char *path, const char *fname);
 		char *getfile();
 		int open();
 		void close();
@@ -41,7 +41,8 @@ class dds {
 		bool isalpha();
 
 	private:
-		char m_fname[500];
+		char m_fpath[500];
+		char m_fname[100];
 		int m_fsize;
 		FILE *m_fh;
 		DDS_HEADER m_hdr;

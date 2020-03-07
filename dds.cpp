@@ -18,24 +18,26 @@ dds::dds() {
 	memset(&m_dx10hdr, 0, sizeof(DDS_HEADER_DXT10));
 }
 
-bool dds::setfile(const char *fname) {
-	int ifname = strlen(fname);
-	if(ifname > 499)
+bool dds::setfile(const char *path, const char *fname) {
+	int ipath = strlen(path);
+	int iname = strlen(fname);
+	if(ipath > 499 || iname > 99)
 		return false;
 
+	sprintf(m_fpath, "%s", path);
 	sprintf(m_fname, "%s", fname);
 	return true;
 }
 
 char *dds::getfile() {
-	return m_fname;
+	return m_fpath;
 }
 
 int dds::open() {
-	if(!strlen(m_fname))
+	if(!strlen(m_fpath))
 		return FILENOTFOUND;
 
-	m_fh = fopen(m_fname, "rb");
+	m_fh = fopen(m_fpath, "rb");
 	if(!m_fh)
 		return FILEOPENERR;
 
@@ -176,7 +178,7 @@ int dds::open() {
 	}
 
 	fclose(m_fh);
-	sprintf(buffer, "Done loading %s", m_fname);
+	sprintf(buffer, "Done loading %s", m_fpath);
 	frame->setstatus(buffer);
 	return 0;
 }
@@ -189,7 +191,7 @@ void dds::close() {
 	m_bIsextended = false;
 	memset(&m_hdr, 0, sizeof(DDS_HEADER));
 	memset(&m_dx10hdr, 0, sizeof(DDS_HEADER_DXT10));
-	sprintf(buffer, "Closed %s", m_fname);
+	sprintf(buffer, "Closed %s", strlen(m_fname) > 0 ? m_fname : m_fpath);
 	frame->setstatus(buffer);
 }
 
@@ -227,7 +229,7 @@ void dds::showinfo() {
 }
 
 void dds::printheader() {
-	printf("\nHeader info for file: %s\n\n", m_fname);
+	printf("\nHeader info for file: %s\n\n", m_fpath);
 	printf("Size: %d\n", m_hdr.dwSize);
 	printf("Flags: 0x%.8X\n", m_hdr.dwFlags);
 	printf("Height: %d\n", m_hdr.dwHeight);

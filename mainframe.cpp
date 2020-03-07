@@ -58,12 +58,15 @@ void mainframe::close() {
 	m_bImageset = false;
 	SetMinClientSize(wxSize(300, 300));
 	SetMaxClientSize(wxSize(300, 300));
+	SetLabel("Frib DDS Viewer");
 }
 
 void mainframe::OnMotion(wxMouseEvent& event) {
 	event.GetPosition(&m_imousex, &m_imousey);
-	sprintf(buffer, "%d, %d", m_imousex - m_idrawx, m_imousey - m_idrawy);
-	SetStatusText(buffer);
+	if(m_bImageset) {
+		sprintf(buffer, "%d, %d", m_imousex - m_idrawx, m_imousey - m_idrawy);
+		SetStatusText(buffer);
+	}
 }
 
 void mainframe::OnOpen(wxCommandEvent& event) {
@@ -77,7 +80,7 @@ void mainframe::OnOpen(wxCommandEvent& event) {
 }
 
 void mainframe::open(const char *path, const char *f) {
-	if(!maindds.setfile(path)) {
+	if(!maindds.setfile(path, f)) {
 		wxLogMessage("Error setting dds file name");
 		return;
 	}

@@ -7,6 +7,16 @@ Requires:
 - wxWidgets 3.0
 
 
+Compiling on Linux:
+
+ - make
+ - ./install.sh
+
+
+Compiling on Windows
+
+ - not sure
+
 Supports:
 
 - 32 bit color

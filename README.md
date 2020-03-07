@@ -1,10 +1,11 @@
 # fribdds
 Cross Platform DDS Image Viewer
 
-Requires: \n
--wxWidgets 3.0 \n
+Requires: 
+-wxWidgets 3.0
 
-Supports: \n
+Supports:
+
 -32 bit color
 -16 bit color (5:6:5, 4:4:4:4, and 1:5:5:5)
 

@@ -4,16 +4,18 @@
 extern char buffer[2048];
 
 dds maindds;
-int imousex, imousey;
 
 wxBEGIN_EVENT_TABLE(mainframe, wxFrame)
-    EVT_MENU(ID_Open,   mainframe::OnOpen)
     EVT_MENU(ID_Close, mainframe::OnClose)
+    EVT_MENU(ID_Open,   mainframe::OnOpen)
+		EVT_MENU(ID_Refclear, mainframe::OnRefclear)
+		EVT_MENU(ID_Refset, mainframe::OnRefset)
     EVT_MENU(ID_Show, mainframe::OnShow)
     EVT_MENU(wxID_EXIT,  mainframe::OnExit)
-		EVT_SIZE(mainframe::OnResize)
-		EVT_PAINT(mainframe::OnRepaint)
 		EVT_MOTION(mainframe::OnMotion)
+		EVT_PAINT(mainframe::OnPaint)
+		EVT_RIGHT_DOWN(mainframe::OnRDown)
+		EVT_SIZE(mainframe::OnResize)
 wxEND_EVENT_TABLE()
 
 mainframe::mainframe(const wxString& title, const wxPoint& pos, const wxSize& size)
@@ -34,6 +36,13 @@ mainframe::mainframe(const wxString& title, const wxPoint& pos, const wxSize& si
     menuBar->Append(menuFile, "&File");
 		menuBar->Append(menuView, "&View");
     SetMenuBar(menuBar);
+
+		menuPop = new wxMenu;
+		menuPop->Append(ID_Refset, "&Set reference point here", "Set a reference point at the clicked position");
+		menuPop->Enable(ID_Refset, 0);
+		menuPop->Append(ID_Refclear, "&Clear reference point", "Clear the previously set reference point");
+		menuPop->Enable(ID_Refclear, 0);
+
     CreateStatusBar();
     SetStatusText("Welcome to Frib DDS Viewer!");
 		SetMinClientSize(wxSize(300, 300));
@@ -41,7 +50,11 @@ mainframe::mainframe(const wxString& title, const wxPoint& pos, const wxSize& si
 
 		m_idrawx = 0;
 		m_idrawy = 0;
+		m_irefx = 0;
+		m_irefy = 0;
 }
+
+void mainframe::setstatus(const char *st) {	SetStatusText(st); }
 
 void mainframe::OnExit(wxCommandEvent& event) {
 	Close(true);
@@ -55,7 +68,10 @@ void mainframe::close() {
 	maindds.close();
 	menuFile->Enable(ID_Close, 0);
 	menuView->Enable(ID_Show, 0);
+	menuPop->Enable(ID_Refclear, 0);
+	menuPop->Enable(ID_Refset, 0);
 	m_bImageset = false;
+	m_bRefset = false;
 	SetMinClientSize(wxSize(300, 300));
 	SetMaxClientSize(wxSize(300, 300));
 	SetLabel("Frib DDS Viewer");
@@ -64,9 +80,12 @@ void mainframe::close() {
 void mainframe::OnMotion(wxMouseEvent& event) {
 	event.GetPosition(&m_imousex, &m_imousey);
 	if(m_bImageset) {
-		sprintf(buffer, "%d, %d", m_imousex - m_idrawx, m_imousey - m_idrawy);
-		SetStatusText(buffer);
+		if(m_bRefset)
+			sprintf(buffer, "%d, %d (Rel: %d, %d)", m_imousex - m_idrawx, m_imousey - m_idrawy, m_imousex - m_irefx, m_imousey - m_irefy);
+		else
+			sprintf(buffer, "%d, %d", m_imousex - m_idrawx, m_imousey - m_idrawy);
 	}
+	SetStatusText(buffer);
 }
 
 void mainframe::OnOpen(wxCommandEvent& event) {
@@ -108,6 +127,7 @@ void mainframe::open(const char *path, const char *f) {
 	DDS_HEADER *hdr = maindds.getheader();
 
 	m_bImageset = true;
+	menuPop->Enable(ID_Refset, 1);
 	int pxlsize = maindds.getpxlsize();
 	if(pxlsize == 2) {
 		if(maindds.isalpha())
@@ -153,25 +173,7 @@ void mainframe::open(const char *path, const char *f) {
 	menuView->Enable(ID_Show, 1);
 }
 
-void mainframe::setstatus(const char *st) {
-	SetStatusText(st);
-}
-
-void mainframe::OnShow(wxCommandEvent& event) {
-	maindds.showinfo();
-}
-
-void mainframe::OnResize(wxSizeEvent& event) {
-	if(!m_bImageset) {
-		wxPaintDC dc(this);
-		dc.Clear();
-		return;
-	}
-	wxPaintDC dc(this);
-	dc.DrawBitmap(m_bmp, 0, 0, true);
-}
-
-void mainframe::OnRepaint(wxPaintEvent& event) {
+void mainframe::OnPaint(wxPaintEvent& event) {
 	if(!m_bImageset) {
 		wxPaintDC dc(this);
 		dc.Clear();
@@ -179,4 +181,40 @@ void mainframe::OnRepaint(wxPaintEvent& event) {
 	}
 	wxPaintDC dc(this);
 	dc.DrawBitmap(m_bmp, m_idrawx, m_idrawy, true);
+	if(m_bRefset) {
+		dc.SetBrush(*wxRED_BRUSH);
+		dc.SetPen(*wxRED_PEN);
+		dc.DrawCircle(m_irefx, m_irefy, 1);
+	}
 }
+
+void mainframe::OnRDown(wxMouseEvent& event) {
+	event.GetPosition(&m_iclickx, &m_iclicky);
+	PopupMenu(menuPop, m_iclickx, m_iclicky);
+}
+
+void mainframe::OnRefclear(wxCommandEvent& event) {
+	m_irefx = 0;
+	m_irefy = 0;
+	m_bRefset = false;
+	menuPop->Enable(ID_Refclear, 0);
+	wxPaintEvent pe;
+	OnPaint(pe);
+}
+
+void mainframe::OnRefset(wxCommandEvent& event) {
+	m_irefx = m_iclickx;
+	m_irefy = m_iclicky;
+	m_bRefset = true;
+	menuPop->Enable(ID_Refclear, 1);
+	wxPaintEvent pe;
+	OnPaint(pe);
+}
+
+void mainframe::OnResize(wxSizeEvent& event) {
+	wxPaintEvent pe;
+	OnPaint(pe);
+}
+
+void mainframe::OnShow(wxCommandEvent& event) {	maindds.showinfo(); }
+

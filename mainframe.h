@@ -11,7 +11,9 @@ enum
 {
 	ID_Open = 1,
 	ID_Close = 2,
-	ID_Show = 3
+	ID_Show = 3,
+	ID_Refset = 4,
+	ID_Refclear
 };
 
 class mainframe : public wxFrame {
@@ -25,12 +27,16 @@ class mainframe : public wxFrame {
     void OnMotion(wxMouseEvent& event);
     void OnOpen(wxCommandEvent& event);
     void OnShow(wxCommandEvent& event);
-    void OnRepaint(wxPaintEvent& event);
+		void OnRefclear(wxCommandEvent& event);
+		void OnRefset(wxCommandEvent& event);
+		void OnRDown(wxMouseEvent& event);
+    void OnPaint(wxPaintEvent& event);
     void OnResize(wxSizeEvent& event);
 		void close();
     wxDECLARE_EVENT_TABLE();
 		wxMenu *menuFile;
 		wxMenu *menuView;
+		wxMenu *menuPop;
 		wxImage m_img;
 		wxBitmap m_bmp;
 		bool m_bImageset;
@@ -38,6 +44,11 @@ class mainframe : public wxFrame {
 		int m_idrawy;
 		int m_imousex;
 		int m_imousey;
+		int m_iclickx;
+		int m_iclicky;
+		int m_irefx;
+		int m_irefy;
+		bool m_bRefset;
 };
 
 #endif

@@ -149,9 +149,6 @@ void mainframe::open(const char *path, const char *f) {
 		else
 			m_bmp = wxBitmap(m_img, 3 * 8);
 
-		wxPaintDC dc(this);
-		dc.DrawBitmap(m_bmp, 0, 0, true);
-
 		SetMinClientSize(wxSize(0, 0));
 		if(hdr->dwWidth > 500 && hdr->dwHeight > 500) {
 			SetMaxClientSize(wxSize(hdr->dwWidth, hdr->dwHeight));

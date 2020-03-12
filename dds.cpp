@@ -52,29 +52,22 @@ int dds::open() {
 	m_bisalpha = (m_hdr.ddspf.dwFlags & DDPF_ALPHAPIXELS);
 	m_pxlsize = m_hdr.ddspf.dwRGBBitCount / 8;
 	m_imgsize = w * h;
-//	if(m_pxlsize == 2)
-//		m_imgdata = malloc(m_imgsize * 2);
-//	else
 	m_imgdata = malloc(m_imgsize * 3);
 
 	if(m_hdr.ddspf.dwFlags & DDPF_FOURCC) {
-		if(m_hdr.ddspf.dwFourCC == g_iDXT1) {
-			//image is compressed with DXT1
+		if(m_hdr.ddspf.dwFourCC == g_iDXT1) { //DXT1 compression
 			m_pxlsize = 3;
-//			m_alphadata = malloc(m_imgsize);
-
-			WORD color0, color1, color2, color3;
 			DXT1_COLOR cmpclr[4];
 			DXT1_COMPRESSED_PIXELS cmppxls;
-			int cmppxls_count = m_imgsize / 16;
+			int units = m_imgsize / 16;
+			int mapsperrow = m_hdr.dwWidth / 4;
+			int mapspercol = m_hdr.dwHeight / 4;
+			printf("imgsize: %d, cmp pxls: %d\n", m_imgsize, units);
 			int clridx;
-			for(int i = 0; i < cmppxls_count; i++) {
-				fread(&cmppxls.co_0, 1, 2, m_fh);
-				fread(&cmppxls.co_1, 1, 2, m_fh);
+			for(int i = 0; i < units; i++) {
+				fread(&cmppxls.co_0, 2, 1, m_fh);
+				fread(&cmppxls.co_1, 2, 1, m_fh);
 				fread(&cmppxls.map, 4, 1, m_fh);
-				//try reordering map
-//				cmppxls.map = cmppxls.map << 24 | (cmppxls.map << 8 & 0xFF0000) | (cmppxls.map >> 8 & 0xFF00) | (cmppxls.map >> 24 & 0xFF);
-
 				cmpclr[0] = cmppxls.co_0;
 				cmpclr[1] = cmppxls.co_1;
 				if(cmpclr[0].color565 > cmpclr[1].color565) {
@@ -88,16 +81,19 @@ int dds::open() {
 					cmpclr[2].r = cmpclr[0].r / 2 + cmpclr[1].r / 2;
 					cmpclr[2].g = cmpclr[0].g / 2 + cmpclr[1].g / 2;
 					cmpclr[2].b = cmpclr[0].b / 2 + cmpclr[1].b / 2;
-					cmpclr[3].r = 0xFF;
-					cmpclr[3].g = 0xFF;
-					cmpclr[3].b = 0xFF;
+					cmpclr[3].r = 0x00;
+					cmpclr[3].g = 0x00;
+					cmpclr[3].b = 0x00;
 				} 
+				int rowswritten = i / mapsperrow;
+				int mapinrow = i % mapsperrow;
+				int loc = (rowswritten * m_hdr.dwWidth + mapinrow) * 3;
 				for(int j = 0; j < 16; j++) {
-					clridx = cmppxls.map >> j*2 & 3;
-					((char *)m_imgdata)[i*16*3+j*3] = cmpclr[clridx].r;
-					((char *)m_imgdata)[i*16*3+j*3+1] = cmpclr[clridx].g;
-					((char *)m_imgdata)[i*16*3+j*3+2] = cmpclr[clridx].b;
-				//	((char *)m_alphadata)[i*16+j] = 0xFF;
+					int clridx = (cmppxls.map >> j*2) & 3;
+					loc += m_hdr.dwWidth * (j / 4) + (j % 4) * 3;
+					((char *)m_imgdata)[loc] = cmpclr[clridx].r;
+					((char *)m_imgdata)[loc + 1] = cmpclr[clridx].g;
+					((char *)m_imgdata)[loc + 2] = cmpclr[clridx].b;
 				}
 			}
 		} else return UNSUPPFMT;

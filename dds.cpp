@@ -85,15 +85,17 @@ int dds::open() {
 					cmpclr[3].g = 0x00;
 					cmpclr[3].b = 0x00;
 				} 
-				int rowswritten = i / mapsperrow;
+				int mapswritten = i / mapsperrow;
 				int mapinrow = i % mapsperrow;
-				int loc = (rowswritten * m_hdr.dwWidth + mapinrow) * 3;
+				int loc = (((i / mapsperrow) * m_hdr.dwWidth) * 3 + mapinrow * 4) * 3;
 				for(int j = 0; j < 16; j++) {
 					int clridx = (cmppxls.map >> j*2) & 3;
-					loc += m_hdr.dwWidth * (j / 4) + (j % 4) * 3;
-					((char *)m_imgdata)[loc] = cmpclr[clridx].r;
-					((char *)m_imgdata)[loc + 1] = cmpclr[clridx].g;
-					((char *)m_imgdata)[loc + 2] = cmpclr[clridx].b;
+					int row = j / 4;
+					int col = j % 4;
+					loc += (m_hdr.dwWidth * row  + col) * 3;
+					((char *)m_imgdata)[loc] = (cmpclr[clridx].r * 255) / 31;
+					((char *)m_imgdata)[loc + 1] = (cmpclr[clridx].g * 255) / 63;
+					((char *)m_imgdata)[loc + 2] = (cmpclr[clridx].b * 255) / 31;
 				}
 			}
 		} else return UNSUPPFMT;

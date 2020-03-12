@@ -61,13 +61,9 @@ int dds::open() {
 			DXT1_COMPRESSED_PIXELS cmppxls;
 			int units = m_imgsize / 16;
 			int mapsperrow = m_hdr.dwWidth / 4;
-			int mapspercol = m_hdr.dwHeight / 4;
-			printf("imgsize: %d, cmp pxls: %d\n", m_imgsize, units);
 			int clridx;
 			for(int i = 0; i < units; i++) {
-				fread(&cmppxls.co_0, 2, 1, m_fh);
-				fread(&cmppxls.co_1, 2, 1, m_fh);
-				fread(&cmppxls.map, 4, 1, m_fh);
+				fread(&cmppxls, 8, 1, m_fh);
 				cmpclr[0] = cmppxls.co_0;
 				cmpclr[1] = cmppxls.co_1;
 				if(cmpclr[0].color565 > cmpclr[1].color565) {
@@ -85,14 +81,11 @@ int dds::open() {
 					cmpclr[3].g = 0x00;
 					cmpclr[3].b = 0x00;
 				} 
-				int mapswritten = i / mapsperrow;
-				int mapinrow = i % mapsperrow;
-				int loc = (((i / mapsperrow) * m_hdr.dwWidth) * 3 + mapinrow * 4) * 3;
 				for(int j = 0; j < 16; j++) {
 					int clridx = (cmppxls.map >> j*2) & 3;
-					int row = j / 4;
-					int col = j % 4;
-					loc += (m_hdr.dwWidth * row  + col) * 3;
+					int row = (i / mapsperrow) * 4 + j / 4;
+					int col = (i % mapsperrow) * 4 + j % 4;
+					int loc = (row * m_hdr.dwWidth + col) * 3;
 					((char *)m_imgdata)[loc] = (cmpclr[clridx].r * 255) / 31;
 					((char *)m_imgdata)[loc + 1] = (cmpclr[clridx].g * 255) / 63;
 					((char *)m_imgdata)[loc + 2] = (cmpclr[clridx].b * 255) / 31;

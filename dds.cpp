@@ -220,44 +220,52 @@ void dds::showinfo() {
 }
 
 void dds::printheader() {
-	printf("\nHeader info for file: %s\n\n", m_fpath);
-	printf("Size: %d\n", m_hdr.dwSize);
-	printf("Flags: 0x%.8X\n", m_hdr.dwFlags);
-	printf("Height: %d\n", m_hdr.dwHeight);
-	printf("Width: %d\n", m_hdr.dwWidth);
-	printf("PitchOrLinearSize: %d\n", m_hdr.dwPitchOrLinearSize);
-	printf("Depth: %d\n", m_hdr.dwDepth);
-	printf("MipMapCount: %d\n", m_hdr.dwMipMapCount);
-	printf("Reserved[11] (omitted)\n");
-	printf("Pixel Format:\n");
-		printf("\tSize: %d\n", m_hdr.ddspf.dwSize);
-		buffer[0] = 0;
+	sprintf(buffer, "Details for %s", m_fname);
+	wxDialog dlgDetails(frame, -1, wxString(buffer), wxDefaultPosition, wxSize(400, 500), wxCAPTION);
+
+	int printed = 0;
+	printed = sprintf(buffer, "\nHeader info for file: %s\n\n", m_fpath);
+	printed += sprintf(buffer+printed, "Size: %d\n", m_hdr.dwSize);
+	printed += sprintf(buffer+printed, "Flags: 0x%.8X\n", m_hdr.dwFlags);
+	printed += sprintf(buffer+printed, "Height: %d\n", m_hdr.dwHeight);
+	printed += sprintf(buffer+printed, "Width: %d\n", m_hdr.dwWidth);
+	printed += sprintf(buffer+printed, "PitchOrLinearSize: %d\n", m_hdr.dwPitchOrLinearSize);
+	printed += sprintf(buffer+printed, "Depth: %d\n", m_hdr.dwDepth);
+	printed += sprintf(buffer+printed, "MipMapCount: %d\n", m_hdr.dwMipMapCount);
+	printed += sprintf(buffer+printed, "Reserved[11] (omitted)\n");
+	printed += sprintf(buffer+printed, "Pixel Format:\n");
+		printed += sprintf(buffer+printed, "  Size: %d\n", m_hdr.ddspf.dwSize);
+		//buffer[0] = 0;
+		printed += sprintf(buffer+printed, "  Flags: ");
 		if(m_hdr.ddspf.dwFlags & DDPF_ALPHAPIXELS)
-			strcat(buffer, "DDPF_ALPHAPIXELS ");
+			printed += sprintf(buffer+printed, "DDPF_ALPHAPIXELS ");
 		if(m_hdr.ddspf.dwFlags & DDPF_ALPHA)
-			strcat(buffer, "DDPF_ALPHA ");
-		if(m_hdr.ddspf.dwFlags & DDPF_ALPHA)
-			strcat(buffer, "DDPF_FOURCC ");
+			printed += sprintf(buffer+printed, "DDPF_ALPHA ");
 		if(m_hdr.ddspf.dwFlags & DDPF_FOURCC)
-			strcat(buffer, "DDPF_RGB ");
+			printed += sprintf(buffer+printed, "DDPF_FOURCC ");
 		if(m_hdr.ddspf.dwFlags & DDPF_RGB)
-			strcat(buffer, "DDPF_ALPHA ");
+			printed += sprintf(buffer+printed, "DDPF_RGB ");
 		if(m_hdr.ddspf.dwFlags & DDPF_YUV)
-			strcat(buffer, "DDPF_YUV ");
-		printf("\tFlags: %s\n", buffer);
-		memcpy(buffer, &m_hdr.ddspf.dwFourCC, 4);
-		buffer[4] = 0;
-		printf("\tFourCC: %s\n", m_hdr.ddspf.dwFourCC ? buffer : "None");
-		printf("\tRGBBitCount: %d\n", m_hdr.ddspf.dwRGBBitCount);
-		printf("\tRBitMask: 0x%.8X\n", m_hdr.ddspf.dwRBitMask);
-		printf("\tGBitMask: 0x%.8X\n", m_hdr.ddspf.dwGBitMask);
-		printf("\tBBitMask: 0x%.8X\n", m_hdr.ddspf.dwBBitMask);
-		printf("\tABitMask: 0x%.8X\n", m_hdr.ddspf.dwABitMask);
-	printf("Caps: %d\n", m_hdr.dwCaps);
-	printf("Caps2: %d\n", m_hdr.dwCaps2);
-	printf("Caps3: %d\n", m_hdr.dwCaps3);
-	printf("Caps4: %d\n", m_hdr.dwCaps4);
-	printf("Reserved2: 0x%.8X\n", m_hdr.dwReserved2);
+			printed += sprintf(buffer+printed, "DDPF_YUV ");
+		if(m_hdr.ddspf.dwFlags & DDPF_LUMINANCE)
+			printed += sprintf(buffer+printed, "DDPF_LUMINANCE ");
+//		buffer[4] = 0;
+		printed += sprintf(buffer+printed, "\n  FourCC: ");
+		snprintf(buffer+printed, 5, "%s", m_hdr.ddspf.dwFourCC ? (char *)&m_hdr.ddspf.dwFourCC : "None");
+		printed += 4;
+		printed += sprintf(buffer+printed, "\n  RGBBitCount: %d\n", m_hdr.ddspf.dwRGBBitCount);
+		printed += sprintf(buffer+printed, "  RBitMask: 0x%.8X\n", m_hdr.ddspf.dwRBitMask);
+		printed += sprintf(buffer+printed, "  GBitMask: 0x%.8X\n", m_hdr.ddspf.dwGBitMask);
+		printed += sprintf(buffer+printed, "  BBitMask: 0x%.8X\n", m_hdr.ddspf.dwBBitMask);
+		printed += sprintf(buffer+printed, "  ABitMask: 0x%.8X\n", m_hdr.ddspf.dwABitMask);
+	printed += sprintf(buffer+printed, "Caps: %d\n", m_hdr.dwCaps);
+	printed += sprintf(buffer+printed, "Caps2: %d\n", m_hdr.dwCaps2);
+	printed += sprintf(buffer+printed, "Caps3: %d\n", m_hdr.dwCaps3);
+	printed += sprintf(buffer+printed, "Caps4: %d\n", m_hdr.dwCaps4);
+	printed += sprintf(buffer+printed, "Reserved2: 0x%.8X\n", m_hdr.dwReserved2);
+	
+	wxStaticText lblDetails(&dlgDetails, -1, buffer, wxPoint(10, 0));
+	dlgDetails.ShowModal();
 
 	if(m_bIsextended) {
 		printf("Extended DX10 Header:\n");

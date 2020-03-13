@@ -168,6 +168,9 @@ void mainframe::open(const char *path, const char *f) {
 	SetLabel(buffer);
 	menuFile->Enable(ID_Close, 1);
 	menuView->Enable(ID_Show, 1);
+
+	wxPaintEvent pe;
+	OnPaint(pe);
 }
 
 void mainframe::OnPaint(wxPaintEvent& event) {

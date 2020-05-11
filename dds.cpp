@@ -6,6 +6,10 @@ extern mainframe *frame;
 extern char buffer[2048];
 
 const int g_iDXT1 = 0x31545844;
+const int g_iDXT2 = 0x32545844;
+const int g_iDXT3 = 0x33545844;
+const int g_iDXT4 = 0x34545844;
+const int g_iDXT5 = 0x35545844;
 
 dds::dds() {
 	m_fh = NULL;
@@ -91,6 +95,8 @@ int dds::open() {
 					((char *)m_imgdata)[loc + 2] = (cmpclr[clridx].b * 255) / 31;
 				}
 			}
+		} else if(m_hdr.ddspf.dwFourCC == g_iDXT5) {
+			return UNSUPPFMT; //TODO: ADD DXT5 support
 		} else return UNSUPPFMT;
 	} else {
 		if(m_pxlsize == 4) {

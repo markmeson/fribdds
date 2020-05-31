@@ -23,8 +23,4 @@ Supports:
 
 - 16 bit color (5:6:5, 4:4:4:4, and 1:5:5:5)
 
-- DXT1, DXT3, DXT4 and DXT5 Compressed Images
-
-Does Not Yet Support:
-
-- DXT2 Format
+- DXT1, DXT2, DXT3, DXT4 and DXT5 Compressed Images

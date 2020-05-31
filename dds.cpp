@@ -95,7 +95,7 @@ int dds::open() {
 					((char *)m_imgdata)[loc + 2] = (cmpclr[clridx].b * 255) / 31;
 				}
 			}
-		} else if(m_hdr.ddspf.dwFourCC == g_iDXT3) {
+		} else if(m_hdr.ddspf.dwFourCC == g_iDXT2 || m_hdr.ddspf.dwFourCC == g_iDXT3) {
 			m_pxlsize = 4;
 			m_alphadata = malloc(m_imgsize);
 			DXT1_COLOR cmpclr[4];

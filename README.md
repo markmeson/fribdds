@@ -15,7 +15,7 @@ Compiling on Linux:
 
 Compiling on Windows
 
- - not sure
+ - not sure yet
 
 Supports:
 
@@ -23,8 +23,8 @@ Supports:
 
 - 16 bit color (5:6:5, 4:4:4:4, and 1:5:5:5)
 
-- DXT1 Compressed Images
+- DXT1, DXT3, DXT4 and DXT5 Compressed Images
 
+Does Not Yet Support:
 
-Does Not Support:
-- Non-DXT1 Compressed DDS Images
+- DXT2 Format

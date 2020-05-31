@@ -95,8 +95,104 @@ int dds::open() {
 					((char *)m_imgdata)[loc + 2] = (cmpclr[clridx].b * 255) / 31;
 				}
 			}
-		} else if(m_hdr.ddspf.dwFourCC == g_iDXT5) {
-			return UNSUPPFMT; //TODO: ADD DXT5 support
+		} else if(m_hdr.ddspf.dwFourCC == g_iDXT3) {
+			m_pxlsize = 4;
+			m_alphadata = malloc(m_imgsize);
+			DXT1_COLOR cmpclr[4];
+			DXT3_MAP d3map;
+			int clridx, units = m_imgsize / 16;
+			int mapsperrow = m_hdr.dwWidth / 4;
+			for(int i = 0; i < units; i++) {
+				fread(&d3map, sizeof(d3map), 1, m_fh);
+				cmpclr[0] = d3map.pxls.co_0;
+				cmpclr[1] = d3map.pxls.co_1;
+				if(cmpclr[0].color565 > cmpclr[1].color565) {
+					cmpclr[2].r = (cmpclr[0].r  * 2) / 3 + cmpclr[1].r / 3;
+					cmpclr[2].g = (cmpclr[0].g  * 2) / 3 + cmpclr[1].g / 3;
+					cmpclr[2].b = (cmpclr[0].b  * 2) / 3 + cmpclr[1].b / 3;
+					cmpclr[3].r = cmpclr[0].r / 3 + (cmpclr[1].r * 2) / 3;
+					cmpclr[3].g = cmpclr[0].g / 3 + (cmpclr[1].g * 2) / 3;
+					cmpclr[3].b = cmpclr[0].b / 3 + (cmpclr[1].b * 2) / 3;
+				} else {
+					cmpclr[2].r = cmpclr[0].r / 2 + cmpclr[1].r / 2;
+					cmpclr[2].g = cmpclr[0].g / 2 + cmpclr[1].g / 2;
+					cmpclr[2].b = cmpclr[0].b / 2 + cmpclr[1].b / 2;
+					cmpclr[3].r = 0x00;
+					cmpclr[3].g = 0x00;
+					cmpclr[3].b = 0x00;
+				}
+				for(int j = 0; j < 16; j++) {
+					int clridx = (d3map.pxls.map >> j*2) & 3;
+					int row = (i / mapsperrow) * 4 + j / 4;
+					int col = (i % mapsperrow) * 4 + j % 4;
+					int loc = (row * m_hdr.dwWidth + col) * 3;
+					((char *)m_imgdata)[loc] = (cmpclr[clridx].r * 255) / 31;
+					((char *)m_imgdata)[loc + 1] = (cmpclr[clridx].g * 255) / 63;
+					((char *)m_imgdata)[loc + 2] = (cmpclr[clridx].b * 255) / 31;
+					((char *)m_alphadata)[row * m_hdr.dwWidth + col] = (d3map.alphamap >> j*4) & 0xF;
+				}
+			}
+		} else if(m_hdr.ddspf.dwFourCC == g_iDXT4 || m_hdr.ddspf.dwFourCC == g_iDXT5) {
+			m_pxlsize = 4;
+			m_alphadata = malloc(m_imgsize);
+			DXT1_COLOR cmpclr[4];
+			BYTE bc3alphas[8];
+			BC3_MAP bc3map;
+			int clridx, units = m_imgsize / 16;
+			int mapsperrow = m_hdr.dwWidth / 4; 
+			for(int i = 0; i < units; i++) {
+				fread(&bc3map, sizeof(bc3map), 1, m_fh);
+				bc3alphas[0] = bc3map.ref_alpha[0];
+				bc3alphas[1] = bc3map.ref_alpha[1];
+
+				if( bc3alphas[0] > bc3alphas[1] ) {
+					// 6 interpolated alpha values.
+					bc3alphas[2] = 6/7*bc3alphas[0] + 1/7*bc3alphas[1]; // bit code 010
+					bc3alphas[3] = 5/7*bc3alphas[0] + 2/7*bc3alphas[1]; // bit code 011
+					bc3alphas[4] = 4/7*bc3alphas[0] + 3/7*bc3alphas[1]; // bit code 100
+					bc3alphas[5] = 3/7*bc3alphas[0] + 4/7*bc3alphas[1]; // bit code 101
+					bc3alphas[6] = 2/7*bc3alphas[0] + 5/7*bc3alphas[1]; // bit code 110
+					bc3alphas[7] = 1/7*bc3alphas[0] + 6/7*bc3alphas[1]; // bit code 111
+				} else {
+					// 4 interpolated alpha values.
+					bc3alphas[2] = 4/5*bc3alphas[0] + 1/5*bc3alphas[1]; // bit code 010
+					bc3alphas[3] = 3/5*bc3alphas[0] + 2/5*bc3alphas[1]; // bit code 011
+					bc3alphas[4] = 2/5*bc3alphas[0] + 3/5*bc3alphas[1]; // bit code 100
+					bc3alphas[5] = 1/5*bc3alphas[0] + 4/5*bc3alphas[1]; // bit code 101
+					bc3alphas[6] = 0;                         // bit code 110
+					bc3alphas[7] = 255;                       // bit code 111
+				}
+
+				cmpclr[0] = bc3map.pxls.co_0;
+				cmpclr[1] = bc3map.pxls.co_1;
+				if(cmpclr[0].color565 > cmpclr[1].color565) {
+					cmpclr[2].r = (cmpclr[0].r  * 2) / 3 + cmpclr[1].r / 3;
+					cmpclr[2].g = (cmpclr[0].g  * 2) / 3 + cmpclr[1].g / 3;
+					cmpclr[2].b = (cmpclr[0].b  * 2) / 3 + cmpclr[1].b / 3;
+					cmpclr[3].r = cmpclr[0].r / 3 + (cmpclr[1].r * 2) / 3;
+					cmpclr[3].g = cmpclr[0].g / 3 + (cmpclr[1].g * 2) / 3;
+					cmpclr[3].b = cmpclr[0].b / 3 + (cmpclr[1].b * 2) / 3;
+				} else {
+					cmpclr[2].r = cmpclr[0].r / 2 + cmpclr[1].r / 2;
+					cmpclr[2].g = cmpclr[0].g / 2 + cmpclr[1].g / 2;
+					cmpclr[2].b = cmpclr[0].b / 2 + cmpclr[1].b / 2;
+					cmpclr[3].r = 0x00;
+					cmpclr[3].g = 0x00;
+					cmpclr[3].b = 0x00;
+				}
+
+				for(int j = 0; j < 16; j++) {
+					int clridx = (bc3map.pxls.map >> j*2) & 3;
+					long long alphatbl = *(long long *)bc3map.idx_alpha & 0x00FFFFFFFFFFFF;
+					int row = (i / mapsperrow) * 4 + j / 4;
+					int col = (i % mapsperrow) * 4 + j % 4;
+					int loc = (row * m_hdr.dwWidth + col) * 3;
+					((char *)m_imgdata)[loc] = (cmpclr[clridx].r * 255) / 31;
+					((char *)m_imgdata)[loc + 1] = (cmpclr[clridx].g * 255) / 63;
+					((char *)m_imgdata)[loc + 2] = (cmpclr[clridx].b * 255) / 31;
+					((char *)m_alphadata)[row * m_hdr.dwWidth + col] = bc3alphas[(alphatbl >> j*3) & 7];
+				}
+			}
 		} else return UNSUPPFMT;
 	} else {
 		if(m_pxlsize == 4) {

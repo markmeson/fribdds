@@ -3,6 +3,8 @@
 
 #include "dds.h"
 
+#pragma pack(push, 1)
+
 typedef struct {
 	BYTE r;
 	BYTE g;
@@ -26,6 +28,17 @@ typedef struct {
 	DXT1_COLOR co_1;
 	DWORD map;
 } DXT1_COMPRESSED_PIXELS;
+
+typedef struct {
+	unsigned long long alphamap;
+	DXT1_COMPRESSED_PIXELS pxls;
+} DXT3_MAP;
+
+typedef struct {
+	BYTE ref_alpha[2];
+	BYTE idx_alpha[6];
+	DXT1_COMPRESSED_PIXELS pxls;
+} BC3_MAP;
 
 struct DDS_PIXELFORMAT {
   DWORD dwSize;
@@ -193,5 +206,7 @@ typedef struct {
   UINT                     arraySize;
   UINT                     miscFlags2;
 } DDS_HEADER_DXT10;
+
+#pragma pack(pop)
 
 #endif
